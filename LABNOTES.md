@@ -69,3 +69,12 @@
   - TTL unchanged (63): equal hop counts, so TTL is NOT a usable hijack signal here.
     Detection relied on control-plane (foreign AS_PATH) + FIB, not hop count.
 - Repro: scenarios/01-subprefix-hijack.sh (inject), scenarios/restore.sh (withdraw).
+
+## 2026-09-21 — Session 3: Defense part 1 — prefix-list (E3)
+- Prefix-list PL-ATTACKER-IN (permit 192.0.2.0/24 only) applied inbound on transit's
+  neighbor 10.0.3.2 (attacker). Config-based (permanent), not runtime.
+- A/B result: same sub-prefix attack -> BLOCKED. /25 never enters transit table;
+  FIB stays on victim; legit /24 of attacker still passes; session stays Established.
+- Note: "% Inbound soft reconfiguration not enabled" is expected — rejected routes are
+  dropped by default (memory saving). Enable `soft-reconfiguration inbound` to audit them.
+- First cell of RQ1 matrix filled: sub-prefix x prefix-list = BLOCKED. See RESULTS-matrix.md.
