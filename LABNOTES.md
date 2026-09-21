@@ -53,3 +53,19 @@
 ### Next
 - Session 2: expand to 5 ASes (add attacker + second transit), run the first sub-prefix hijack,
   and compare AS_PATH/TTL against this baseline.
+
+## 2026-09-21 — Session 2: First sub-prefix hijack (added attacker AS65666)
+- Topology: added attacker off transit (transit:eth3 <-> attacker:eth1, 10.0.3.0/30).
+  Attacker owns legit 192.0.2.0/24; pre-stages 203.0.113.1/25 on lo (announced on demand).
+- Experiment E2 — sub-prefix hijack (attacker announces 203.0.113.0/25):
+  - Prediction: not recorded (again) — MUST write predictions before running next time.
+  - /24 and /25 coexist in user RIB; user matches /25 for 203.0.113.1 (longest-prefix-match),
+    AS_PATH "65001 65666".
+  - Transit FIB for 203.0.113.1 flips victim(10.0.1.1/eth1) -> attacker(10.0.3.2/eth3).
+  - Scope proven: .1 (in /25) hijacked, .200 (out of /25) still to victim.
+  - Victim itself loses its own /25 range (installs /25 via transit over connected /24).
+  - Ping stayed 0% loss — attacker answered. Key lesson: availability != integrity;
+    silent interception is worse than an outage.
+  - TTL unchanged (63): equal hop counts, so TTL is NOT a usable hijack signal here.
+    Detection relied on control-plane (foreign AS_PATH) + FIB, not hop count.
+- Repro: scenarios/01-subprefix-hijack.sh (inject), scenarios/restore.sh (withdraw).
