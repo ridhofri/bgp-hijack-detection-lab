@@ -1,0 +1,25 @@
+name: bgp-lab
+
+topology:
+  defaults:
+    kind: linux
+    image: quay.io/frrouting/frr:10.7.1   # wajib sama dengan .env dan VERSIONS.md
+  nodes:
+    victim:
+      binds:
+        - configs/victim/daemons:/etc/frr/daemons:ro
+        - configs/victim/frr.conf:/etc/frr/frr.conf:ro
+        - configs/victim/vtysh.conf:/etc/frr/vtysh.conf:ro
+    transit:
+      binds:
+        - configs/transit/daemons:/etc/frr/daemons:ro
+        - configs/transit/frr.conf:/etc/frr/frr.conf:ro
+        - configs/transit/vtysh.conf:/etc/frr/vtysh.conf:ro
+    user:
+      binds:
+        - configs/user/daemons:/etc/frr/daemons:ro
+        - configs/user/frr.conf:/etc/frr/frr.conf:ro
+        - configs/user/vtysh.conf:/etc/frr/vtysh.conf:ro
+  links:
+    - endpoints: ["victim:eth1", "transit:eth1"]
+    - endpoints: ["transit:eth2", "user:eth1"]
