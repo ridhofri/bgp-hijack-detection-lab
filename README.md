@@ -98,3 +98,6 @@ No peering to real routers, no scanning, no traffic to any network I do not own.
 ## About
 
 Maintained by Ridho (@ridhofri). Found a bug or have an idea? Feel free to open an issue.
+## About
+
+Maintained by Ridho (https://github.com/ridhofri). Found a bug or have an idea? Feel free to open an issue.
