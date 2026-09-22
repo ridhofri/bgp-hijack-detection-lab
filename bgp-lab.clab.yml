@@ -1,5 +1,9 @@
 name: bgp-lab
 
+mgmt:
+  network: clab
+  ipv4-subnet: 172.20.20.0/24
+
 topology:
   defaults:
     kind: linux
@@ -25,6 +29,17 @@ topology:
         - configs/attacker/daemons:/etc/frr/daemons:ro
         - configs/attacker/frr.conf:/etc/frr/frr.conf:ro
         - configs/attacker/vtysh.conf:/etc/frr/vtysh.conf:ro
+    rtr:
+      image: rpki/stayrtr:latest
+      mgmt-ipv4: 172.20.20.200
+      entrypoint: /stayrtr
+      cmd: -cache /roas.json -bind :3323 -checktime=false
+      binds:
+        - rpki/roas.json:/roas.json:ro
+    gobmp:
+      image: sbezverk/gobmp:latest
+      mgmt-ipv4: 172.20.20.201
+      cmd: --dump=console --source-port=5000
   links:
     - endpoints: ["victim:eth1", "transit:eth1"]
     - endpoints: ["transit:eth2", "user:eth1"]

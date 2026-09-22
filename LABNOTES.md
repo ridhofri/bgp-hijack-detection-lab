@@ -142,3 +142,28 @@
 - Schema note: table view uses "path" (string) + "rpkiValid" (boolean); detail view uses
   "aspath.segments" + "rpkiValidationState" (valid/invalid/notfound). Parser handles both;
   boolean true is rendered "valid".
+
+## 2026-09-22 — Session 7: BMP-fed detector v2 (E7)
+- Infra debt paid: StayRTR and goBMP are containerlab nodes with pinned mgmt IPs
+  (.200 and .201); transit RPKI cache moved to .200. One deploy brings up all 6 nodes.
+  StayRTR and goBMP image digests recorded in VERSIONS.md.
+- Transit: bgpd -M rpki -M bmp; bmp targets COLLECTOR -> 172.20.20.201:5000, monitoring
+  ipv4 unicast pre-policy + post-policy; soft-reconfiguration inbound on the attacker peer.
+  "show bmp": session Up.
+- goBMP schema: is_adj_rib_in_post_policy false = pre-policy, true = post-policy;
+  'del' messages carry no as_path.
+- H1 confirmed: under ROV, the sub-prefix /25 appears as a pre-policy 'add' and a
+  post-policy 'del' -> a blocked attempt is now visible.
+- Detector v2 (detect_bmp.py), "ever-seen" model keyed by (prefix, peer, as_path):
+  ACTIVE if ever added post-policy, BLOCKED if only seen pre-policy.
+  Result: forged-origin /24 = ACTIVE (R3); sub-prefix /25 = BLOCKED (R1+R2).
+  Negative control (fresh BMP session, no attack) = OK.
+  Propagation echo (65666 65001 65010) correctly NOT flagged.
+- Debugging lessons (three failed designs before the working one):
+  1) evaluating on every message -> duplicate alerts and false "origin -1" alerts from 'del';
+  2) evaluating only the final state (level-triggered) erased the withdrawn forged-origin attack;
+  3) keying by (prefix, peer) let the forged path collide with a propagation echo from the
+     same peer; BMP's initial dump replays old timestamps, so time-ordered episodes were fragile.
+  Also: docker restart does not clear docker logs -> read with --since.
+- Limitations: batch over logs (not live alerts); ACTIVE = passed policy, not best-path
+  (needs loc-rib monitoring); the ever-seen model records no end time.
