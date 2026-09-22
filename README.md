@@ -20,9 +20,9 @@ stops which attack**.
 
 ```mermaid
 graph LR
-    victim["victim<br/>AS65010<br/>owns 203.0.113.0/24"] --- transit["transit<br/>AS65001<br/>(no filter by default)"]
-    attacker["attacker<br/>AS65666<br/>announces bogus routes"] --- transit
-    transit --- user["user<br/>AS65020<br/>observation point"]
+    victim["victim AS65010<br>owns 203.0.113.0/24"] --- transit["transit AS65001<br>no filter by default"]
+    attacker["attacker AS65666<br>announces bogus routes"] --- transit
+    transit --- user["user AS65020<br>observation point"]
 ```
 
 - **victim** originates the legitimate prefix `203.0.113.0/24`.
@@ -95,18 +95,14 @@ All experiments run **only** inside this local lab. Address space uses documenta
 prefixes (`203.0.113.0/24`, `192.0.2.0/24` — RFC 5737) and private ASNs (RFC 6996).
 No peering to real routers, no scanning, no traffic to any network I do not own.
 
-## About
 
 Maintained by Ridho (@ridhofri). Found a bug or have an idea? Feel free to open an issue.
-## About
 
 Maintained by Ridho (https://github.com/ridhofri). Found a bug or have an idea? Feel free to open an issue.
-## About
 I'm Ridho, a telecommunications engineering student at Politeknik Negeri Malang.
 I built this lab because reading about BGP hijacks wasn't enough — I wanted to
 reproduce one, watch the traffic get redirected, and find out which defenses
 actually hold. Suggestions and issues are welcome.
-## About
 I'm Ridho, a telecommunications engineering student at Politeknik Negeri Malang.
 I built this lab because reading about BGP hijacks wasn't enough — I wanted to
 reproduce one, watch the traffic get redirected, and find out which defenses
@@ -114,9 +110,13 @@ actually hold. Suggestions and issues are welcome.
 ## 
 
 Maintained by Ridho (https://github.com/ridhofri). Found a bug or have an idea? Feel free to open an issue.
-## About
 
 I'm Ridho, a telecommunications engineering student at Politeknik Negeri Malang.
 I built this lab because reading about BGP hijacks wasn't enough — I wanted to
 reproduce one, watch the traffic get redirected, and find out which defenses
 actually hold. Suggestions and issues are welcome.
+
+
+Maintained by Ridho (https://github.com/ridhofri). Found a bug or have an idea? Feel free to open an issue.
+
+## Author https://github.com/ridhofri
