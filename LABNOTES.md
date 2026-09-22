@@ -167,3 +167,17 @@
   Also: docker restart does not clear docker logs -> read with --since.
 - Limitations: batch over logs (not live alerts); ACTIVE = passed policy, not best-path
   (needs loc-rib monitoring); the ever-seen model records no end time.
+
+## 2026-09-22 — Session 7b: Prefix-list vs forged-origin (E8) — matrix correction
+- Why: the RQ1 matrix listed prefix-list vs forged-origin as "HIT (origin only)" without a test.
+- Method: runtime prefix-list PL-ATTACKER-IN (permit 192.0.2.0/24) inbound on the attacker
+  peer, together with ROV; ran scenarios/02-forged-origin.sh; then removed it (config files
+  unchanged).
+- Result: received-routes showed the forged 203.0.113.0/24 (65666 65010), "3 prefixes
+  (2 filtered)"; post-filter routes = 192.0.2.0/24 only; transit kept one path (victim) and
+  the FIB stayed on 10.0.1.1 -> BLOCKED.
+- Attribution: ROV alone lets this Valid route through (E5), so the prefix-list did the blocking.
+- Lesson: prefix filters check the prefix, not the path, so they stop forged-origin at the
+  first hop. They fail once the forged route arrives via a provider/peer that legitimately
+  carries the prefix. And: an untested cell in a results matrix is a claim, not a result.
+- Detector v2 ("ever-seen" model) negative control re-run on a fresh BMP session: OK.
