@@ -114,3 +114,9 @@ actually hold. Suggestions and issues are welcome.
 ## 
 
 Maintained by Ridho (https://github.com/ridhofri). Found a bug or have an idea? Feel free to open an issue.
+## About
+
+I'm Ridho, a telecommunications engineering student at Politeknik Negeri Malang.
+I built this lab because reading about BGP hijacks wasn't enough — I wanted to
+reproduce one, watch the traffic get redirected, and find out which defenses
+actually hold. Suggestions and issues are welcome.
