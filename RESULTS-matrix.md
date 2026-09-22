@@ -6,7 +6,7 @@ Legend: BLOCKED = attack neutralized | HIT = attack succeeds | (n/a) = not yet t
 |-------------------------|------------|------------------|----------|-----------|
 | Sub-prefix hijack (/25) | HIT (E2)   | BLOCKED (E3)     | BLOCKED (E4) | (n/a)     |
 | Exact-prefix hijack     | (n/a)      | (n/a)            | (n/a)    | (n/a)     |
-| Forged-origin hijack    | (n/a)      | (n/a)            | (n/a)    | (n/a)     |
+| Forged-origin hijack    | HIT        | HIT (origin only) | HIT (bypass) | (n/a)     |
 | Route leak              | (n/a)      | (n/a)            | (n/a)    | (n/a)     |
 
 ## Evidence
@@ -24,3 +24,12 @@ Legend: BLOCKED = attack neutralized | HIT = attack succeeds | (n/a) = not yet t
   transit FIB stays on victim. Valid (/24) and NotFound routes still pass.
   KEY: RPKI without policy only *labels* Invalid — the /25 stayed best & installed and the
   hijack still succeeded. The route-map is what turns the label into enforcement.
+
+- E5 (forged-origin vs RPKI/ROV): attacker announces the victim's exact /24 with a forged
+  AS_PATH "65666 65010" (via route-map set as-path prepend 65010 outbound). Transit's RPKI
+  reads the origin (65010), matches the ROA, and marks the route VALID. The ROV route-map
+  (deny match rpki invalid) therefore does NOT reject it. With the forged route made more
+  attractive (local-preference 200 — standing in for topological closeness), it wins
+  best-path and the transit FIB moves to the attacker (10.0.3.2). Hijack succeeds with ROV
+  fully active. KEY: RPKI validates the ORIGIN, not the PATH — forged-origin bypasses it.
+  This is the gap that BGPsec (path signing) and ASPA (AS-relationship validation) address.

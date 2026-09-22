@@ -92,3 +92,19 @@
 - RQ1 updated: sub-prefix x RPKI = BLOCKED (E4).
 - Debt: rtr runs outside the topology; IP happened to stay 172.20.20.6 but this is fragile
   -> promote StayRTR to a clab node (approach "A") to make it reproducible.
+
+## 2026-09-22 — Session 5: Forged-origin hijack bypasses RPKI/ROV (E5)
+- Attack: attacker (AS65666) announces victim's exact 203.0.113.0/24 with forged AS_PATH
+  "65666 65010" (route-map RM-FORGE-OUT: set as-path prepend 65010, applied outbound).
+  Repro: scenarios/02-forged-origin.sh / restore-forged.sh.
+- Predictions P1-P4 all correct: path "65666 65010", RPKI valid, ROV lets it pass,
+  FIB initially stays on victim (forged path longer: 2 hops vs 1).
+- Key insight #1: RPKI marks the forged route VALID because it only checks the ORIGIN
+  (65010), which matches the ROA. Path authenticity is never verified.
+- Key insight #2 (the payoff): with local-preference 200 on the forged route (simulating an
+  AS topologically closer to the attacker), it wins best-path and FIB -> attacker (10.0.3.2)
+  WHILE the ROV route-map is still active. ROV only rejects Invalid; this route is Valid.
+- Conclusion: RPKI/ROV does not stop forged-origin hijacks. Mitigations that would: BGPsec
+  (signs the whole AS_PATH) and ASPA (validates AS adjacencies). => matrix E5.
+- Real-world tie-in: this is why partial-impact hijacks (e.g., Indosat 2014) affect only the
+  ASes for whom the bogus path looks better.
