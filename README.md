@@ -128,7 +128,7 @@ Both detectors check routes against `detector/intent.json`, which declares the p
 
 **v1** polls `show ip bgp json` on the transit. Simple, but it only sees the post-policy table.
 
-**v2** consumes goBMP JSON. For each unique route `(prefix, peer, AS_PATH)` it records whether the route was ever seen pre-policy and whether it was ever added post-policy: **ACTIVE** if it passed the filters, **BLOCKED** if it was only seen pre-policy. Keying on the AS_PATH keeps a forged path from colliding with a harmless propagation echo from the same peer, and the "ever-seen" flags make the result robust to message order and to the initial table dump BMP replays with old timestamps. It took three failed designs to get here; they are documented in [`LABNOTES.md`](LABNOTES.md).
+**v2** consumes goBMP JSON. For each unique route `(prefix, peer, AS_PATH)` it records whether the route was ever seen pre-policy and whether it was ever added post-policy: **BLOCKED** if only seen pre-policy, **ACTIVE** if it reached post-policy but not the Loc-RIB, and **WINNING** if it entered the Loc-RIB (it won best-path and traffic is actually diverted). Keying on the AS_PATH keeps a forged path from colliding with a harmless propagation echo from the same peer, and the "ever-seen" flags make the result robust to message order and to the initial table dump BMP replays with old timestamps. It took three failed designs to get here; they are documented in [`LABNOTES.md`](LABNOTES.md).
 
 ## Roadmap
 
@@ -139,7 +139,7 @@ Both detectors check routes against `detector/intent.json`, which declares the p
 - [x] Intent-based detector v1 (E6)
 - [x] BMP-fed detector v2 with ACTIVE / BLOCKED classification (E7)
 - [x] StayRTR and goBMP as native containerlab nodes
-- [ ] Loc-RIB monitoring to separate "passed policy" from "won best-path"
+- [x] Loc-RIB monitoring separates "passed policy" from "won best-path"
 - [ ] Live streaming alerts instead of batch analysis over logs
 - [ ] Pin the StayRTR and goBMP images by digest in the topology
 - [ ] Exact-prefix hijack with a second transit (best-path competition)
