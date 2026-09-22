@@ -78,3 +78,17 @@
 - Note: "% Inbound soft reconfiguration not enabled" is expected — rejected routes are
   dropped by default (memory saving). Enable `soft-reconfiguration inbound` to audit them.
 - First cell of RQ1 matrix filled: sub-prefix x prefix-list = BLOCKED. See RESULTS-matrix.md.
+
+## 2026-09-22 — Session 4: RPKI/ROV (E4)
+- New component: StayRTR (rpki/stayrtr v0.6.4) serving self-made ROA from rpki/roas.json,
+  bound to :3323, run manually on the clab network (approach "B" — not yet a clab node).
+- Isolation: prefix-list from E3 removed on transit so RPKI is the ONLY defense under test.
+- Finding (label vs action): before any policy, the /25 was tagged rpki validation-state:
+  invalid but stayed valid/external/best/installed -> hijack STILL succeeded (FIB -> attacker).
+  RPKI validation only labels; it does not change route selection by itself.
+- ROV enforcement: route-map RM-RPKI-IN (deny 10 match rpki invalid; permit 20) inbound on
+  attacker peer. Result: /25 rejected ("% Network not in table"), FIB stays on victim,
+  Valid+NotFound routes still pass (permit 20 proven necessary).
+- RQ1 updated: sub-prefix x RPKI = BLOCKED (E4).
+- Debt: rtr runs outside the topology; IP happened to stay 172.20.20.6 but this is fragile
+  -> promote StayRTR to a clab node (approach "A") to make it reproducible.

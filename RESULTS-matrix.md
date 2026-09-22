@@ -4,7 +4,7 @@ Legend: BLOCKED = attack neutralized | HIT = attack succeeds | (n/a) = not yet t
 
 | Attack \ Defense        | No defense | Prefix-list (in) | RPKI/ROV | Roles/OTC |
 |-------------------------|------------|------------------|----------|-----------|
-| Sub-prefix hijack (/25) | HIT (E2)   | BLOCKED (E3)     | (n/a)    | (n/a)     |
+| Sub-prefix hijack (/25) | HIT (E2)   | BLOCKED (E3)     | BLOCKED (E4) | (n/a)     |
 | Exact-prefix hijack     | (n/a)      | (n/a)            | (n/a)    | (n/a)     |
 | Forged-origin hijack    | (n/a)      | (n/a)            | (n/a)    | (n/a)     |
 | Route leak              | (n/a)      | (n/a)            | (n/a)    | (n/a)     |
@@ -17,3 +17,10 @@ Legend: BLOCKED = attack neutralized | HIT = attack succeeds | (n/a) = not yet t
   transit FIB stayed on victim (10.0.1.1/eth1); user best-path stayed "65001 65010".
   Legit prefix 192.0.2.0/24 still passed; BGP session stayed Established (rejecting a route
   does not drop the peering). Filter = whitelist 192.0.2.0/24 with implicit deny.
+
+- E4 (RPKI/ROV): StayRTR serves a self-made ROA (203.0.113.0/24, maxLength 24, AS65010).
+  Transit connects via RTR (rpki cache tcp) and applies route-map "deny match rpki invalid".
+  Sub-prefix /25 from AS65666 is marked Invalid (exceeds maxLength) and rejected inbound;
+  transit FIB stays on victim. Valid (/24) and NotFound routes still pass.
+  KEY: RPKI without policy only *labels* Invalid — the /25 stayed best & installed and the
+  hijack still succeeded. The route-map is what turns the label into enforcement.
