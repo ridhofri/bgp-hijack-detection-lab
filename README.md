@@ -95,6 +95,6 @@ All experiments run **only** inside this local lab. Address space uses documenta
 prefixes (`203.0.113.0/24`, `192.0.2.0/24` — RFC 5737) and private ASNs (RFC 6996).
 No peering to real routers, no scanning, no traffic to any network I do not own.
 
-## Author
+## About
 
-Built by [@ridhofri](https://github.com/ridhofri) as a network-security portfolio project.
+Maintained by Ridho (@ridhofri). Found a bug or have an idea? Feel free to open an issue.
