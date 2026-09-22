@@ -108,3 +108,20 @@
   (signs the whole AS_PATH) and ASPA (validates AS adjacencies). => matrix E5.
 - Real-world tie-in: this is why partial-impact hijacks (e.g., Indosat 2014) affect only the
   ASes for whom the bogus path looks better.
+
+## 2026-09-22 — Session 6: Intent-based anomaly detector (E6)
+- detector/detect.py + detector/intent.json read FRR "show ip bgp json" (post-policy Loc-RIB)
+  and check each path vs intent. Rules: R1 wrong-origin, R2 sub-prefix,
+  R3 invalid-adjacency (ASPA-style: AS before the origin must be a declared neighbor).
+- WIN: R3 catches the forged-origin route (65666 65010) that RPKI marks valid and ROV lets
+  through -> detection succeeds exactly where cryptographic prevention fails. Fires even when
+  the forged route is not yet best (early warning): "RPKI=valid" but flagged as anomaly.
+- Negative control passes: clean baseline => 0 alerts.
+- Post-policy blind spot: with ROV active the /25 is rejected at ingress (route-map deny
+  seq10 Invoked=3, "% Network not in table"), so a Loc-RIB detector sees nothing. Disabling
+  ROV, the identical attack immediately triggers R2+R1. => a post-policy detector cannot see
+  attacks a defense already blocked; pre-policy (Adj-RIB-In via soft-reconfiguration or BMP)
+  is needed to log attempted-but-blocked attacks.
+- Schema note: table view uses "path" (string) + "rpkiValid" (boolean); detail view uses
+  "aspath.segments" + "rpkiValidationState" (valid/invalid/notfound). Parser handles both;
+  boolean true is rendered "valid".

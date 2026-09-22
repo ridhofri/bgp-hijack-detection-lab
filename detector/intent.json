@@ -1,0 +1,12 @@
+{
+  "vantage": "transit (AS65001)",
+  "description": "Ground truth for BGP origin/path anomaly detection in this lab.",
+  "protected_prefixes": [
+    { "prefix": "203.0.113.0/24", "legit_origin": 65010 }
+  ],
+  "legit_adjacencies": [
+    [65001, 65010],
+    [65001, 65020],
+    [65001, 65666]
+  ]
+}
