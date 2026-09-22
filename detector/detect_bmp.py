@@ -1,23 +1,21 @@
 #!/usr/bin/env python3
 """
-BMP-fed BGP anomaly detector (v2) - "ever-seen" model.
+BMP-fed BGP anomaly detector (v3) - "ever-seen" model over three RIB views.
 
-Reads goBMP JSON (one message per line) from stdin. For each UNIQUE route
-(prefix, peer_asn, as_path) it records whether the route was ever seen in the
-pre-policy Adj-RIB-In and/or added to the post-policy Adj-RIB-In. Then it
-applies the intent rules (R1/R2/R3) once per unique route and classifies:
+Reads goBMP JSON (one message per line) from stdin. For each unique route it
+records whether it was ever seen pre-policy, post-policy, and in the Loc-RIB,
+then applies intent rules (R1/R2/R3) once and classifies by severity:
 
-  ACTIVE  : route was 'add'ed post-policy at some point  (passed the filters)
-  BLOCKED : route only ever seen pre-policy               (a defense removed it)
+  BLOCKED : only ever seen pre-policy            (a filter removed it)
+  ACTIVE  : reached post-policy but not Loc-RIB   (passed filters, lost best-path)
+  WINNING : present in the Loc-RIB                (won best-path; traffic is actually diverted)
 
-Including as_path in the key keeps distinct paths (e.g. a forged path vs a
-propagation echo) from colliding. The model is monotonic (ever-seen flags only
-go from False to True), so it is robust to message order and to the initial
-table dump that BMP replays with old timestamps.
+Adj-RIB-In messages carry the real peer (e.g. 65666). Loc-RIB messages use a
+synthetic peer (peer_asn = local AS, peer_ip 0.0.0.0, peer_type 3, RFC 9069),
+so routes are matched across views by (prefix, as_path), NOT by peer.
 
-Note: ACTIVE means "passed policy", not necessarily "won best-path".
-
-goBMP/OpenBMP: is_adj_rib_in_post_policy False->pre, True->post; action add/del.
+goBMP flags: is_adj_rib_in_post_policy (false=pre, true=post), is_loc_rib.
+action add = present, del = withdrawn (del has no as_path).
 
 Usage: docker logs --since <ts> clab-bgp-lab-gobmp 2>&1 | python3 detector/detect_bmp.py
 """
@@ -66,7 +64,8 @@ def rule_hits(net, aspath, protected, adj):
 
 def main():
     protected, adj = load_intent()
-    seen = {}   # (prefix, peer_asn, aspath_tuple) -> {"pre":bool,"post":bool}
+    # keyed by (prefix, as_path) so views match across pre/post/loc-rib
+    seen = {}
 
     for line in sys.stdin:
         if '"prefix"' not in line:
@@ -76,7 +75,7 @@ def main():
         except json.JSONDecodeError:
             continue
         if not d.get("is_ipv4") or "prefix" not in d or d.get("action") != "add":
-            continue   # only 'add' carries a path and proves presence
+            continue
         try:
             net = ipaddress.ip_network(f"{d['prefix']}/{d['prefix_len']}")
         except (ValueError, KeyError):
@@ -86,21 +85,34 @@ def main():
         aspath = tuple(int(a) for a in d.get("base_attrs", {}).get("as_path", []))
         if not aspath:
             continue
-        key = (str(net), d.get("peer_asn"), aspath)
-        rec = seen.setdefault(key, {"pre": False, "post": False})
-        if d.get("is_adj_rib_in_post_policy"):
+        key = (str(net), aspath)
+        rec = seen.setdefault(key, {"pre": False, "post": False, "loc": False,
+                                    "peers": set()})
+        if d.get("is_loc_rib"):
+            rec["loc"] = True
+        elif d.get("is_adj_rib_in_post_policy"):
             rec["post"] = True
+            rec["peers"].add(d.get("peer_asn"))
         else:
             rec["pre"] = True
+            rec["peers"].add(d.get("peer_asn"))
 
     n = 0
-    for (prefix, peer, aspath), rec in sorted(seen.items()):
+    for (prefix, aspath), rec in sorted(seen.items()):
         hits = rule_hits(ipaddress.ip_network(prefix), list(aspath), protected, adj)
         if not hits:
             continue
-        cls = "ACTIVE " if rec["post"] else "BLOCKED"
+        if rec["loc"]:
+            cls = "WINNING"
+        elif rec["post"]:
+            cls = "ACTIVE "
+        elif rec["pre"]:
+            cls = "BLOCKED"
+        else:
+            continue
+        peers = ",".join(f"AS{p}" for p in sorted(x for x in rec["peers"] if x is not None)) or "loc-rib"
         rules = "; ".join(f"{r}: {why}" for r, why in hits)
-        print(f"[{cls}] {prefix} from AS{peer} "
+        print(f"[{cls}] {prefix} via {peers} "
               f"aspath={' '.join(map(str, aspath))} :: {rules}")
         n += 1
     if n == 0:

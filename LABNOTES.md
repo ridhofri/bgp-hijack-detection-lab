@@ -181,3 +181,18 @@
   first hop. They fail once the forged route arrives via a provider/peer that legitimately
   carries the prefix. And: an untested cell in a results matrix is a claim, not a result.
 - Detector v2 ("ever-seen" model) negative control re-run on a fresh BMP session: OK.
+
+## 2026-09-22 — Session 8: Loc-RIB monitoring, detector v3 (E9)
+- Added "bmp monitor ipv4 unicast loc-rib" on transit (now pre + post + loc-rib).
+- goBMP loc-rib schema: is_loc_rib=true, and a SYNTHETIC peer (peer_asn = local AS 65001,
+  peer_ip 0.0.0.0, peer_type 3, per RFC 9069) — NOT the route's real origin peer.
+  => detector v3 matches routes across views by (prefix, as_path), not by peer.
+- Three severity classes: BLOCKED (only pre-policy), ACTIVE (post-policy but not loc-rib),
+  WINNING (in loc-rib = actually selected / traffic diverted).
+- Results (same forged-origin attack, only local-pref changed):
+  - baseline loc-rib for 203.0.113.0/24 = aspath [65010] (victim wins) -> H1 confirmed.
+  - forged-origin, no local-pref: post-policy yes, loc-rib no -> ACTIVE (H2 confirmed).
+  - forged-origin, local-pref 200: enters loc-rib -> WINNING (H3 confirmed).
+  - negative control (fresh BMP session) = OK.
+- Meaning: the detector now distinguishes "passed policy" from "won best-path / traffic
+  actually hijacked" — the limitation noted at the end of Session 7 is resolved.
