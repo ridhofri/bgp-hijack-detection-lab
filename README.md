@@ -121,9 +121,6 @@ Maintained by Ridho (https://github.com/ridhofri). Found a bug or have an idea? 
 
 ## Author https://github.com/ridhofri
 
-## About
+## Author
 
-I'm Ridho, a telecommunications engineering student at Politeknik Negeri Malang.
-I built this lab because reading about BGP hijacks wasn't enough — I wanted to
-reproduce one, watch the traffic get redirected, and find out which defenses
-actually hold. Suggestions and issues are welcome.
+Ridho ([@ridhofri](https://github.com/ridhofri))
