@@ -39,3 +39,9 @@ Legend: BLOCKED = attack neutralized | HIT = attack succeeds | (n/a) = not yet t
 - Forged-origin: RPKI/ROV = HIT (bypass), Detector = CAUGHT via R3 (invalid AS adjacency).
 - Post-policy blind spot: an attack blocked by policy (e.g. sub-prefix under ROV) is invisible
   to a Loc-RIB detector; pre-policy visibility (BMP / soft-reconfiguration) is needed to log it.
+
+## Detection (E6) — where prevention fails, detection can still fire
+- Intent-based detector: R1 wrong-origin, R2 sub-prefix, R3 invalid-adjacency.
+- Forged-origin: RPKI/ROV = HIT (bypass), Detector = CAUGHT via R3 (invalid AS adjacency).
+- Post-policy blind spot: an attack blocked by policy (e.g. sub-prefix under ROV) is invisible
+  to a Loc-RIB detector; pre-policy visibility (BMP / soft-reconfiguration) is needed to log it.
